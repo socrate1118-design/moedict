@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>國語辭典查詢</title>
+<meta name="theme-color" content="#7a2e1d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>國語辭典</h1>
+    <div class="tools">
+      <button id="zyToggle" class="tool" aria-label="注音鍵盤" aria-expanded="false">ㄅ</button>
+      <button id="favBtn" class="tool" aria-label="生字本" aria-pressed="false">★</button>
+      <button id="fontBtn" class="tool" aria-label="調整字體大小">A</button>
+      <a class="tool" href="about.html" aria-label="來源與說明">ⓘ</a>
+    </div>
+  </div>
+  <nav id="chips" role="tablist" aria-label="範圍">
+    <button role="tab" data-f="all" aria-selected="true">全部</button>
+    <button role="tab" data-f="single" aria-selected="false">國字</button>
+    <button role="tab" data-f="word" aria-selected="false">詞語</button>
+    <button role="tab" data-f="idiom" aria-selected="false">成語</button>
+  </nav>
+  <form id="searchForm" autocomplete="off">
+    <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="輸入國字、詞語、成語、注音或拼音" aria-label="查詢">
+    <button type="button" id="clearBtn" aria-label="清除" hidden>✕</button>
+  </form>
+  <div id="zyPad" hidden></div>
+  <div id="radicalBar" hidden>
+    <label>部首 <select id="radical"><option value="">不限</option></select></label>
+    <label>筆畫 <select id="strokes"><option value="">不限</option></select></label>
+  </div>
+</header>
+
+<main>
+  <div id="history" hidden></div>
+  <div id="favBar" hidden>
+    <button id="favCopy">複製清單</button>
+    <button id="favPrint">列印</button>
+    <button id="favClear">清空</button>
+  </div>
+  <p id="status" role="status"></p>
+  <ul id="results"></ul>
+  <button id="more" hidden>顯示更多</button>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

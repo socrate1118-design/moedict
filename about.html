@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>來源與授權說明</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="about">
+<p><a href="index.html">← 回到查詢</a></p>
+<h1>來源與授權說明</h1>
+<p>本程式的辭典內容來自中華民國教育部公眾授權資料，採用「創用 CC－姓名標示－禁止改作 臺灣 3.0 版授權條款」
+（<a href="http://creativecommons.org/licenses/by-nd/3.0/tw/legalcode">條款全文</a>）。
+本程式不修改任何條目的詞目、部首、筆畫、字形、音讀、釋義、典源、書證及用法說明等內容；
+僅調整畫面呈現（例如將小字典的逐字注音標記顯示為上方注音、將資料檔的換行符號還原為換行）。</p>
+<h2>姓名標示</h2>
+<ul>
+<li>中華民國教育部（Ministry of Education, R.O.C.）。《重編國語辭典修訂本》（版本編號：2015_20260929）網址：<a href="https://dict.revised.moe.edu.tw/">https://dict.revised.moe.edu.tw/</a></li>
+<li>中華民國教育部（Ministry of Education, R.O.C.）。《國語小字典》（版本編號：2019_20260929）網址：<a href="http://dict.mini.moe.edu.tw/">http://dict.mini.moe.edu.tw/</a></li>
+<li>中華民國教育部（Ministry of Education, R.O.C.）。《國語辭典簡編本》（版本編號：2014_20260929）網址：<a href="http://dict.concised.moe.edu.tw/">http://dict.concised.moe.edu.tw/</a></li>
+<li>中華民國教育部（Ministry of Education, R.O.C.）。《成語典》（版本編號：2020_20260929）網址：<a href="http://dict.idioms.moe.edu.tw/">http://dict.idioms.moe.edu.tw/</a></li>
+</ul>
+<h2>公眾授權使用說明（完整原文）</h2>
+<ul>
+<li><a href="license/reviseddict_10312.pdf">《重編國語辭典修訂本》公眾授權使用說明</a></li>
+<li><a href="license/minidict_10312.pdf">《國語小字典》公眾授權使用說明</a></li>
+<li><a href="license/conciseddict_10312.pdf">《國語辭典簡編本》公眾授權使用說明</a></li>
+<li><a href="license/idiomsdict_10409.pdf">《成語典》公眾授權使用說明</a></li>
+</ul>
+<p>如發現辭典原始內容有錯誤或遺漏，請至教育部辭典網站的意見交流功能回報。</p>
+<h2>離線使用</h2>
+<p>平常只會下載你查過的部分。想在沒有網路的地方使用，可以先連上 Wi-Fi 後，把全部資料下載到這台裝置（約 80 MB，傳輸時會壓縮）。</p>
+<p><button id="dlAll" style="min-height:48px;padding:0 18px;font-size:16px">下載全部資料供離線使用</button> <span id="dlStatus"></span></p>
+<script>
+document.getElementById("dlAll").addEventListener("click", async () => {
+  const st = document.getElementById("dlStatus");
+  try {
+    const m = await (await fetch("data/manifest.json")).json();
+    const urls = [];
+    for (const [s, v] of Object.entries(m)) { urls.push(`data/index-${s}.json`); v.starts.forEach((_, k) => urls.push(`data/${s}-${k}.json`)); }
+    let n = 0;
+    for (const u of urls) { const r = await fetch(u); if (!r.ok) throw new Error(u); await r.arrayBuffer(); st.textContent = `下載中 ${++n}/${urls.length}`; }
+    st.textContent = "完成，之後可離線查詢全部辭典。";
+  } catch (e) { st.textContent = "下載失敗，請確認網路後再試：" + e.message; }
+});
+</script>
+<h2>隱私</h2>
+<p>本程式不蒐集任何個人資料，查詢都在你的裝置上完成，不會傳送到任何伺服器。</p>
+<p>本程式為個人開發的查詢工具，並非教育部官方應用程式。</p>
+</div>
+</body>
+</html>
