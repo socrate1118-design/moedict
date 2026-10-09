@@ -60,6 +60,8 @@ async function getJSON(url, tries = 3) {
 }
 
 const IDX = {};      // src -> {n,z,p,c}
+let GLYPH = {};      // 造字圖：檔名 -> data URL（文字中以 &檔名; 內嵌）
+let ILL = { files: {}, byName: {} }; // 自製插圖：data/illus-index.json（詞目 -> 圖片）
 const byName = {};   // src -> Map(name -> [row])
 const charInfo = new Map(); // 單字 -> [部首, 總筆畫]
 let manifest;
@@ -70,10 +72,14 @@ function loadIndexes() {
     els.status.textContent = "準備辭典索引中…";
     manifest = await getJSON("data/manifest.json");
     let done = 0;
-    await Promise.all(ORDER.map(async s => {
-      IDX[s] = await getJSON(`data/index-${s}.json`);
-      els.status.textContent = `準備辭典索引中… ${++done}/${ORDER.length}`;
-    }));
+    await Promise.all([
+      ...ORDER.map(async s => {
+        IDX[s] = await getJSON(`data/index-${s}.json`);
+        els.status.textContent = `準備辭典索引中… ${++done}/${ORDER.length}`;
+      }),
+      getJSON("data/glyphs.json").then(g => { GLYPH = g; }).catch(() => {}),
+      getJSON("data/illus-index.json", 1).then(p => { ILL = p; }).catch(() => {}),
+    ]);
     for (const s of ORDER) {
       const m = new Map();
       IDX[s].n.forEach((n, i) => { const a = m.get(n); a ? a.push(i) : m.set(n, [i]); });
@@ -181,6 +187,28 @@ function finish(groups) {
 }
 
 // ---------- 顯示：釋義 ----------
+// 文字中的「&檔名.gif;」是教育部的造字圖（Unicode 沒有的字），改以內嵌圖片顯示
+const GLYPH_SPLIT = /(&[0-9A-Za-z_.\-]+\.(?:gif|jpg|png);)/;
+const GLYPH_TOKEN = /^&([0-9A-Za-z_.\-]+\.(?:gif|jpg|png));$/;
+// 輕聲「˙」畫在注音符號上方（字串中以「˙＋注音」出現時）
+function neutralAppend(parent, text) {
+  for (const seg of text.split(/(˙[\u3105-\u312F\u31A0-\u31BF]+)/)) {
+    if (/^˙[\u3105-\u312F\u31A0-\u31BF]+$/.test(seg)) parent.appendChild(h("span", "neu", seg.slice(1)));
+    else if (seg) parent.append(seg);
+  }
+}
+function richAppend(parent, text) {
+  for (const part of text.split(GLYPH_SPLIT)) {
+    const m = part.match(GLYPH_TOKEN);
+    if (!m) { if (part) neutralAppend(parent, part); continue; }
+    const src = GLYPH[m[1].toLowerCase()];
+    if (!src) { parent.append("〓"); continue; }
+    const img = document.createElement("img");
+    img.className = "glyph"; img.alt = "〓"; img.src = src;
+    parent.appendChild(img);
+  }
+}
+const noGlyph = s => s.replace(/&[0-9A-Za-z_.\-]+\.(?:gif|jpg|png);/g, "〓");
 // 小字典釋義以「&&字注音&&」標記逐字注音，轉為直排注音顯示（內容不變）
 function renderRuby(text) {
   const frag = document.createDocumentFragment();
@@ -190,10 +218,11 @@ function renderRuby(text) {
     if (m) {
       any = true;
       const z = h("span", "z");
-      z.append(m[1]);
+      richAppend(z, m[1]);
       // 聲調符號放在注音右側（輕聲「˙」放在上方），符合傳統直排標示
       const tm = m[2].match(/^(˙)?([^ˊˇˋ˙]*)([ˊˇˋ])?$/);
       const i2 = h("i");
+      if (tm && tm[1]) i2.className = "neutral"; // 輕聲：圓點放在注音上方
       if (tm) {
         if (tm[1]) i2.appendChild(h("u", "t0", tm[1]));
         i2.appendChild(h("b", null, tm[2]));
@@ -201,11 +230,11 @@ function renderRuby(text) {
       } else i2.appendChild(h("b", null, m[2]));
       z.appendChild(i2);
       frag.appendChild(z);
-    } else frag.append(seg);
+    } else richAppend(frag, seg);
   });
   return { frag, any };
 }
-const plainDef = t => t.split("&&").map((s, i, a) => (i > 0 && i < a.length ? s.replace(/[ㄅ-ㄯㆠ-ㆿˊˇˋ˙]+$/, "") : s)).join("");
+const plainDef = t => noGlyph(t.split("&&").map((s, i, a) => (i > 0 && i < a.length ? s.replace(/[ㄅ-ㄯㆠ-ㆿˊˇˋ˙]+$/, "") : s)).join(""));
 
 function defEl(src, text, cls = "def") {
   const p = h("p", cls);
@@ -213,18 +242,66 @@ function defEl(src, text, cls = "def") {
     const { frag, any } = renderRuby(text);
     p.appendChild(frag);
     if (any) p.classList.add("rubied");
-  } else p.textContent = text;
+  } else richAppend(p, text);
   return p;
 }
 // 注音：每個音節獨立一格，音節間距一致（避免無聲調的音節看起來和下一個音節黏在一起）
 function zyEl(text) {
   const e = h("span", "zy");
-  for (const syl of text.split(/[\s\u3000]+/).filter(Boolean)) e.appendChild(h("span", "syl", syl));
+  for (const syl of text.split(/[\s\u3000]+/).filter(Boolean)) {
+    const neutral = syl.startsWith("˙");
+    e.appendChild(h("span", neutral ? "syl neu" : "syl", neutral ? syl.slice(1) : syl));
+  }
   return e;
 }
-function line(parent, label, text) { if (text) parent.appendChild(h("p", "meta", label + text)); }
+function line(parent, label, text) {
+  if (!text) return;
+  const p = h("p", "meta", label);
+  richAppend(p, text);
+  parent.appendChild(p);
+}
 
 // 單一辭典的一個條目內容（區塊）
+// 插圖：圖檔打包在 data/illus-N.bin，需要時才下載並切出單張圖
+const packCache = {}, blobCache = {};
+function loadPack(k) {
+  return packCache[k] ??= fetch(`data/illus-${k}.bin`).then(res => {
+    if (!res.ok) throw new Error(res.status);
+    return res.arrayBuffer();
+  }).catch(e => { delete packCache[k]; throw e; });
+}
+async function picURL(file) {
+  if (blobCache[file]) return blobCache[file];
+  const [k, off, len, mime] = ILL.files[file];
+  const buf = await loadPack(k);
+  return blobCache[file] = URL.createObjectURL(new Blob([buf.slice(off, off + len)], { type: mime }));
+}
+function addPics(parent, list) {
+  const seen = new Set();
+  for (const [file, title, credit] of list) {
+    if (seen.has(file) || !ILL.files[file]) continue;
+    seen.add(file);
+    const fig = h("figure", "pic");
+    const holder = h("div", "pich", "載入插圖中…");
+    fig.appendChild(holder);
+    fig.appendChild(h("figcaption", null, title + (credit ? "　" + credit : "")));
+    parent.appendChild(fig);
+    picURL(file).then(url => {
+      const img = document.createElement("img");
+      img.alt = title; img.src = url;
+      holder.textContent = ""; holder.appendChild(img);
+    }).catch(() => { holder.textContent = "插圖載入失敗（請連上網路後重試）"; });
+  }
+}
+function openLightbox(url) {
+  const box = h("div", "lightbox");
+  const img = document.createElement("img");
+  img.src = url;
+  box.appendChild(img);
+  box.addEventListener("click", () => box.remove());
+  document.body.appendChild(box);
+}
+
 function entryBlock(src, r) {
   const d = SRC[src];
   const b = h("div", "entry");
@@ -259,7 +336,7 @@ function entryBlock(src, r) {
     if (fields.length) {
       const det = h("details"); det.appendChild(h("summary", null, "典源、書證與用法"));
       const dl = h("dl");
-      for (const [k, v] of fields) { dl.appendChild(h("dt", null, k)); dl.appendChild(h("dd", null, v)); }
+      for (const [k, v] of fields) { dl.appendChild(h("dt", null, k)); const dd = h("dd"); richAppend(dd, v); dl.appendChild(dd); }
       det.appendChild(dl); b.appendChild(det);
     }
   }
@@ -268,9 +345,12 @@ function entryBlock(src, r) {
 
 function headword(text) {
   const t = h("h2");
-  for (const ch of text) {
-    if (/[㐀-鿿豈-﫿\u{20000}-\u{3134f}]/u.test(ch)) { const b = h("span", "ch", ch); b.dataset.ch = ch; t.appendChild(b); }
-    else t.append(ch);
+  for (const part of text.split(GLYPH_SPLIT)) {
+    if (GLYPH_TOKEN.test(part)) { richAppend(t, part); continue; }
+    for (const ch of part) {
+      if (/[㐀-鿿豈-﫿\u{20000}-\u{3134f}]/u.test(ch)) { const b = h("span", "ch", ch); b.dataset.ch = ch; t.appendChild(b); }
+      else t.append(ch);
+    }
   }
   return t;
 }
@@ -285,7 +365,8 @@ async function buildCard(g) {
   t.appendChild(zyEl(SRC[s0].zy(r0)));
   if (SRC[s0].py(r0)) t.appendChild(h("span", "py", SRC[s0].py(r0)));
   c.appendChild(t);
-  c.appendChild(h("p", "tags", srcs.map(s => SRC[s].label).join("　·　")));
+  const hasPic = !!ILL.byName[g.name];
+  c.appendChild(h("p", "tags", srcs.map(s => SRC[s].label).join("　·　") + (hasPic ? "　·　附插圖" : "")));
   c.appendChild(defEl(s0, SRC[s0].def(r0), "def sum"));
   const body = h("div", "body");
   c.appendChild(body);
@@ -303,6 +384,7 @@ async function openCard(c) {
   c._built = true;
   const g = c._g;
   try {
+    if (ILL.byName[g.name]) addPics(body, ILL.byName[g.name]);
     for (const s of c._srcs) {
       const rows = await getRows(s, g.rows[s]);
       const sec = h("section", "src");
@@ -384,7 +466,7 @@ async function favText() {
   for (const g of state.groups) {
     const s = ORDER.find(x => g.rows[x]);
     const r = await getRow(s, g.rows[s][0]);
-    parts.push(`${g.name}　${SRC[s].zy(r)}\n${plainDef(SRC[s].def(r))}`);
+    parts.push(`${noGlyph(g.name)}　${SRC[s].zy(r)}\n${plainDef(SRC[s].def(r))}`);
   }
   return parts.join("\n\n");
 }
@@ -495,6 +577,8 @@ els.favClear.addEventListener("click", () => {
 els.results.addEventListener("click", e => {
   const star = e.target.closest(".star");
   if (star) { toggleFav(star.dataset.name, star); return; }
+  const pic = e.target.closest(".pich img");
+  if (pic) { openLightbox(pic.src); return; }
   const ch = e.target.closest(".ch");
   const card = e.target.closest(".card");
   if (ch && card?.classList.contains("open")) { // 在展開的條目中點字 → 查該字
