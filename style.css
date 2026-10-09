@@ -95,3 +95,6 @@ dd{margin:0;white-space:pre-wrap;font-family:var(--font);font-size:.97em}
   .card .sum{display:none}
   #results{grid-template-columns:1fr!important}
 }
+
+.zy{display:inline-flex;flex-wrap:wrap;gap:0 .75em}
+.zy .syl{white-space:nowrap}

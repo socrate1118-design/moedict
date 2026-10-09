@@ -216,6 +216,12 @@ function defEl(src, text, cls = "def") {
   } else p.textContent = text;
   return p;
 }
+// 注音：每個音節獨立一格，音節間距一致（避免無聲調的音節看起來和下一個音節黏在一起）
+function zyEl(text) {
+  const e = h("span", "zy");
+  for (const syl of text.split(/[\s\u3000]+/).filter(Boolean)) e.appendChild(h("span", "syl", syl));
+  return e;
+}
 function line(parent, label, text) { if (text) parent.appendChild(h("p", "meta", label + text)); }
 
 // 單一辭典的一個條目內容（區塊）
@@ -223,7 +229,7 @@ function entryBlock(src, r) {
   const d = SRC[src];
   const b = h("div", "entry");
   const head = h("p", "ehead");
-  head.appendChild(h("span", "zy", d.zy(r)));
+  head.appendChild(zyEl(d.zy(r)));
   if (d.py(r)) head.appendChild(h("span", "py", d.py(r)));
   b.appendChild(head);
   if (src === "rev") {
@@ -276,7 +282,7 @@ async function buildCard(g) {
   const srcs = ORDER.filter(s => g.rows[s]);
   const s0 = srcs[0], r0 = await getRow(s0, g.rows[s0][0]);
   const t = headword(g.name);
-  t.appendChild(h("span", "zy", SRC[s0].zy(r0)));
+  t.appendChild(zyEl(SRC[s0].zy(r0)));
   if (SRC[s0].py(r0)) t.appendChild(h("span", "py", SRC[s0].py(r0)));
   c.appendChild(t);
   c.appendChild(h("p", "tags", srcs.map(s => SRC[s].label).join("　·　")));
