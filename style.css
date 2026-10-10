@@ -110,3 +110,5 @@ h2 .glyph{height:1em}
 @media print{.pich img{max-width:60%}}
 .neu{position:relative;display:inline-block}
 .neu::before{content:"˙";position:absolute;left:50%;top:-.12em;transform:translateX(-50%);font-weight:700;line-height:1}
+
+.pic{max-width:260px}
