@@ -1,4 +1,4 @@
-const CACHE = "moedict-v16";
+const CACHE = "moedict-v18";
 const SHELL = ["./", "index.html", "style.css", "app.js", "about.html", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",
   "license/reviseddict_10312.pdf", "license/minidict_10312.pdf", "license/conciseddict_10312.pdf", "license/idiomsdict_10409.pdf"];
