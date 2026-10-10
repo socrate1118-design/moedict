@@ -66,12 +66,12 @@ main{max-width:820px;margin:0 auto;padding:8px 0 40px}
 .ehead{margin:0 0 2px;display:flex;flex-wrap:wrap;gap:2px 12px;align-items:baseline}
 .ehead .zy{font:400 calc(var(--fs)*.95) var(--ui);color:var(--accent)}
 .ehead .py{font:400 calc(var(--fs)*.82) var(--ui);color:var(--muted)}
-.def .z{position:relative;display:inline-block;margin-right:calc(var(--fs)*.85)}
-.def .z i{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:1px;display:flex;align-items:center;font:normal calc(var(--fs)*.56)/1 var(--ui);color:var(--accent);white-space:nowrap}
+.def .z{position:relative;display:inline-block;margin-right:calc(var(--fs)*.72)}
+.def .z i{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:1px;display:flex;align-items:center;font:normal calc(var(--fs)*.42)/1 var(--ui);color:var(--accent);white-space:nowrap}
 .def .z i b{font-weight:400;writing-mode:vertical-rl;text-orientation:upright}
 .def .z i u{text-decoration:none;font-size:1em;line-height:1;display:block}
 .def .z i.neutral{flex-direction:column;align-items:center}
-.def .z i .t0{font-size:.85em;line-height:.45;height:.45em;margin-bottom:0}
+.def .z i .t0{font-size:1em;line-height:.3;height:.3em;margin-bottom:-.05em}
 .def.rubied{line-height:2}
 .body details{margin-top:10px;border-top:1px dashed var(--line);padding-top:6px}
 summary{cursor:pointer;color:var(--accent);font-weight:600;min-height:36px;display:flex;align-items:center}
@@ -108,7 +108,7 @@ h2 .glyph{height:1em}
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:50;display:grid;place-items:center;padding:12px;overflow:auto;cursor:zoom-out}
 .lightbox img{max-width:100%;max-height:100%;object-fit:contain}
 @media print{.pich img{max-width:60%}}
-.neu{position:relative;display:inline-block;line-height:1.1}
-.neu::before{content:"˙";position:absolute;left:50%;top:.14em;transform:translateX(-50%);font-weight:700;line-height:1}
+
+
 
 .pic{max-width:260px}

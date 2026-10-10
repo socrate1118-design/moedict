@@ -190,13 +190,8 @@ function finish(groups) {
 // 文字中的「&檔名.gif;」是教育部的造字圖（Unicode 沒有的字），改以內嵌圖片顯示
 const GLYPH_SPLIT = /(&[0-9A-Za-z_.\-]+\.(?:gif|jpg|png);)/;
 const GLYPH_TOKEN = /^&([0-9A-Za-z_.\-]+\.(?:gif|jpg|png));$/;
-// 輕聲「˙」畫在注音符號上方（字串中以「˙＋注音」出現時）
-function neutralAppend(parent, text) {
-  for (const seg of text.split(/(˙[\u3105-\u312F\u31A0-\u31BF]+)/)) {
-    if (/^˙[\u3105-\u312F\u31A0-\u31BF]+$/.test(seg)) parent.appendChild(h("span", "neu", seg.slice(1)));
-    else if (seg) parent.append(seg);
-  }
-}
+// 輕聲「˙」依標準寫在注音最前面，文字照原樣顯示（只有小字典的直排注音，圓點才放在注音上方）
+function neutralAppend(parent, text) { parent.append(text.replace(/˙(?=[\u3105-\u312F])/g, "·")); }
 function richAppend(parent, text) {
   for (const part of text.split(GLYPH_SPLIT)) {
     const m = part.match(GLYPH_TOKEN);
@@ -248,10 +243,8 @@ function defEl(src, text, cls = "def") {
 // 注音：每個音節獨立一格，音節間距一致（避免無聲調的音節看起來和下一個音節黏在一起）
 function zyEl(text) {
   const e = h("span", "zy");
-  for (const syl of text.split(/[\s\u3000]+/).filter(Boolean)) {
-    const neutral = syl.startsWith("˙");
-    e.appendChild(h("span", neutral ? "syl neu" : "syl", neutral ? syl.slice(1) : syl));
-  }
+  // 輕聲「˙」依標準寫在注音最前面（資料本來就是這樣），不另外處理
+  for (const syl of text.split(/[\s\u3000]+/).filter(Boolean)) e.appendChild(h("span", "syl", syl.replace(/^˙/, "·")));
   return e;
 }
 function line(parent, label, text) {
