@@ -542,9 +542,11 @@ els.chips.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (b && b.dataset.f !== state.filter) setFilter(b.dataset.f);
 });
-els.q.addEventListener("input", () => { state.fav = false; clearTimeout(timer); timer = setTimeout(run, 180); });
+// 輸入文字時，清掉先前選的部首與筆畫，避免被舊的篩選條件擋住
+const resetRadical = () => { els.radical.value = ""; els.strokes.value = ""; };
+els.q.addEventListener("input", () => { state.fav = false; if (els.q.value.trim()) resetRadical(); clearTimeout(timer); timer = setTimeout(run, 180); });
 els.form.addEventListener("submit", e => { e.preventDefault(); els.q.blur(); remember(els.q.value); run(); });
-els.clear.addEventListener("click", () => { els.q.value = ""; els.q.focus(); run(); });
+els.clear.addEventListener("click", () => { els.q.value = ""; resetRadical(); els.q.focus(); run(); });
 els.radical.addEventListener("change", run);
 els.strokes.addEventListener("change", run);
 els.more.addEventListener("click", renderMore);
