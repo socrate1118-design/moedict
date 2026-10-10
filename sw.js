@@ -2,7 +2,7 @@
 //  APP_CACHE  — 網頁程式、圖示、授權文件。程式有更新時把版號加 1。
 //  DATA_CACHE — data/ 底下的辭典、索引與插圖（體積大，使用者可能已下載離線資料）。
 //               只有「data 資料夾的內容有變」時才把版號加 1，否則更新程式不會讓使用者重新下載資料。
-const APP_CACHE = "moedict-app-v23";
+const APP_CACHE = "moedict-app-v24";
 const DATA_CACHE = "moedict-data-v1";
 const SHELL = ["./", "index.html", "style.css", "app.js", "about.html", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",

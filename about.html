@@ -30,7 +30,7 @@
 </ul>
 <p>如發現辭典原始內容有錯誤或遺漏，請至教育部辭典網站的意見交流功能回報。</p>
 <h2>離線使用</h2>
-<p>平常只會下載你查過的部分。想在沒有網路的地方使用，可以先連上 Wi-Fi 後，把全部資料下載到這台裝置（約 80 MB，傳輸時會壓縮）。</p>
+<p>平常只會下載你查過的部分。想在沒有網路的地方使用，可以先連上 Wi-Fi 後，把全部資料（含插圖）下載到這台裝置（約 100 MB）。</p>
 <p><button id="dlAll" style="min-height:48px;padding:0 18px;font-size:16px">下載全部資料供離線使用</button> <span id="dlStatus"></span></p>
 <script>
 document.getElementById("dlAll").addEventListener("click", async () => {
@@ -39,6 +39,9 @@ document.getElementById("dlAll").addEventListener("click", async () => {
     const m = await (await fetch("data/manifest.json")).json();
     const urls = [];
     for (const [s, v] of Object.entries(m)) { urls.push(`data/index-${s}.json`); v.starts.forEach((_, k) => urls.push(`data/${s}-${k}.json`)); }
+    // 造字圖與插圖（插圖分成幾個打包檔，從索引得知有幾個）
+    urls.push("data/glyphs.json", "data/illus-index.json");
+    try { const ill = await (await fetch("data/illus-index.json")).json(); const packs = new Set(Object.values(ill.files).map(v => v[0])); packs.forEach(k => urls.push(`data/illus-${k}.bin`)); } catch {}
     let n = 0;
     for (const u of urls) { const r = await fetch(u); if (!r.ok) throw new Error(u); await r.arrayBuffer(); st.textContent = `下載中 ${++n}/${urls.length}`; }
     st.textContent = "完成，之後可離線查詢全部辭典。";
