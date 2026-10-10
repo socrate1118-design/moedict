@@ -601,5 +601,10 @@ els.results.addEventListener("click", e => {
 }
 
 if ("serviceWorker" in navigator) {
+  // 更新後第一次開啟：新版接手時自動重新整理一次，避免舊的插圖索引搭配新的圖片檔
+  if (navigator.serviceWorker.controller) {
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloaded) { reloaded = true; location.reload(); } });
+  }
   addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
